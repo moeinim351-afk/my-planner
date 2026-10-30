@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>برنامه تیزهوشان</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f5;--card:#fff;--ink:#14213d;--mut:#6b7a90;--ac:#0f9d8a;--warn:#e4572e;--line:#d9e1e8;--soft:#e3f4f1;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1624;--card:#182236;--ink:#eaf0f7;--mut:#93a3b8;--ac:#36c9b4;--warn:#ff7a55;--line:#27344d;--soft:#16332f}}
+:root[data-theme="dark"]{--bg:#0f1624;--card:#182236;--ink:#eaf0f7;--mut:#93a3b8;--ac:#36c9b4;--warn:#ff7a55;--line:#27344d;--soft:#16332f}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.7}
+main{max-width:560px;margin:0 auto;padding:14px 14px 90px}
+h1{font-size:20px;margin:6px 0 2px;font-weight:800}
+.sub{color:var(--mut);font-size:13px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 8px;font-weight:600}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;color:var(--mut);font:inherit;font-size:13px;padding:10px 0;cursor:pointer}
+nav button.on{color:var(--ac);font-weight:800}
+.row{display:flex;align-items:center;gap:10px}
+.sp{justify-content:space-between}
+.nb{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;padding:4px 12px;cursor:pointer}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);transition:width .3s}
+.big{font-size:30px;font-weight:800;color:var(--ac)}
+.task{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.task:last-child{border:0}
+.task input{width:22px;height:22px;accent-color:var(--ac);margin-top:3px;flex:none}
+.task.d span{text-decoration:line-through;color:var(--mut)}
+.tag{font-size:11px;color:var(--warn);display:block}
+.moods{display:flex;gap:8px}
+.moods button{flex:1;font-size:28px;border:2px solid var(--line);background:var(--card);border-radius:12px;padding:6px 0;cursor:pointer}
+.moods button.on{border-color:var(--ac);background:var(--soft)}
+.moods small{display:block;font-size:11px;color:var(--mut);font-family:inherit}
+.stars button{font-size:24px;border:0;background:none;cursor:pointer;opacity:.3;padding:0 2px}
+.stars button.on{opacity:1}
+.cnt{width:36px;height:36px;font-size:20px}
+.num{font-size:26px;font-weight:800;min-width:40px;text-align:center}
+.alert{border-color:var(--warn)}
+.alert h2{color:var(--warn)}
+.grp{font-size:12px;color:var(--mut);margin-top:6px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--mut);font-family:inherit;font-size:11px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:12px;color:var(--mut)}
+textarea{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink);resize:vertical}
+#ban{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:10px;right:10px;max-width:540px;margin:0 auto;background:var(--warn);color:#fff;border-radius:12px;padding:10px 14px;z-index:9;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);font-size:14px}#ban button{background:none;border:0;color:#fff;font-size:18px;cursor:pointer}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="ban"><span id="bm"></span><button onclick="this.parentNode.style.display='none'" aria-label="بستن">✕</button></div>
+<nav><button id="t0">امروز</button><button id="t2">🍅 پومودورو</button><button id="t1">هفته</button></nav>
+<script>
+var KEY='tizhooshan-tracker-v1';
+var D={done:{},log:{},first:null};
+try{var r=localStorage.getItem(KEY);if(r)D=JSON.parse(r)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function add(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x}
+function wstart(d){return add(d,-((d.getDay()+1)%7))}
+function fa(n){return Math.round(n).toLocaleString('fa-IR')}
+var today=ymd(new Date());D.plan=D.plan||{};D.unp=D.unp||{};D.al=D.al||{};D.wal=D.wal||{};
+if(!D.first){D.first=today;save()}
+var S={tab:0,day:today,wk:ymd(wstart(new Date()))};
+var NAMES=['ش','ی','د','س','چ','پ','ج'];
+function base(x){var dt=x instanceof Date?x:parse(x),dow=dt.getDay(),ds0=ymd(dt);
+ if(dow==6||dow==1||dow==3)return [['hw','۱۵:۳۰ تکلیف و مرور درس‌های امروز'],['tkd','۱۷:۰۰ کلاس تکواندو'],['pre','۲۰:۴۵ پیشخوانی درس فردا'],['reel','۲۱:۳۰ ریلز اینستاگرام (با نوت‌بوک ال‌ام)']];
+ if(dow==0||dow==2)return [['hw','۱۶:۰۰ تکلیف و مرور درس‌های امروز'],['walk','۱۷:۰۰ استراحت یا پیاده‌روی بدون گوشی'],['pre','۱۸:۵۰ پیشخوانی درس فردا'],['kz','۲۰:۰۰ کلاس کانون زبان (تا ۲۲:۰۰)'],['reel','۲۲:۳۰ ریلز اینستاگرام (سبک، ۲۰ دقیقه‌ای)']];
+ if(dow==4)return [['ytf','۱۰:۴۵ ویدیو یوتیوب: متن و فیلمبرداری'],['yte','۱۴:۰۰ ویدیو یوتیوب: تدوین'],['rsch','۱۶:۴۵ مرور درس‌های مدرسه'],['reel','۲۰:۰۰ ریلز اینستاگرام (با نوت‌بوک ال‌ام)']];
+ return [['ytu','۱۰:۰۰ ویدیو یوتیوب: تامبنیل، عنوان و آپلود'],['alpha','۱۴:۰۰ پروژه الفا (ساخت سایت): ۲ ساعت منظم'],['post','۱۷:۴۰ پست اسلایدی اینستاگرام این هفته'],['reel','۲۰:۰۰ ریلز اینستاگرام (با نوت‌بوک ال‌ام)'],['plan','۲۰:۴۰ ۱۰ دقیقه برنامه‌ریزی هفته بعد']];
+}
+function pct(ds){var d=parse(ds),t=base(d),n=0,x=D.done[ds]||{};t.forEach(function(k){if(isDone(ds,k[0]))n++});return t.length?n/t.length*100:0}
+function lg(ds){var l=D.log[ds]||(D.log[ds]={mood:'',note:''});return l}
+function streak(){var n=0,d=new Date();if(pct(today)<80)d=add(d,-1);for(;ymd(d)>=D.first;d=add(d,-1)){if(pct(ymd(d))>=80)n++;else break}return n}
+function phase(d){var m=parseInt(new Intl.DateTimeFormat('en-u-ca-persian',{month:'numeric'}).format(d));
+ if(m==10)return ['📖 امتحانات نوبت اول','معدل نوبت اول شرط ثبت‌نام است. یک تا دو هفته قبل از امتحان، وقت بیشتری به درس مدرسه بده.'];
+ return null}
+function bk(){var t=document.getElementById('bkt');t.value=JSON.stringify(D);t.select();try{navigator.clipboard.writeText(t.value)}catch(e){}document.getElementById('bkm').textContent='متن پشتیبان آماده است. آن را جایی نگه دار.'}
+function rs(){var m=document.getElementById('bkm');try{var o=JSON.parse(document.getElementById('bkt').value);if(o&&o.done&&o.log){D=o;if(!D.first)D.first=today;save();render()}else m.textContent='متن پشتیبان درست نیست.'}catch(e){m.textContent='متن پشتیبان درست نیست.'}}
+function fdate(ds,o){return parse(ds).toLocaleDateString('fa-IR',o||{weekday:'long',day:'numeric',month:'long'})}
+function missed(from,to){ // list of {ds,id,label}
+ var out=[],d=parse(from<D.first?D.first:from),e=parse(to);
+ for(;d<=e;d=add(d,1)){var ds=ymd(d),x=D.done[ds]||{};base(d).forEach(function(k){if(!isDone(ds,k[0]))out.push({ds:ds,id:k[0],l:k[1]})})}
+ return out}
+var DUR={hw:60,tkd:90,blk:75,pre:30,walk:30,weak:90,rsch:45,kz:120,reel:30,ytf:120,yte:120,ytu:60,alpha:120,post:60,plan:10},RES={hw:60};
+function lat(s){return s.replace(/[۰-۹]/g,function(c){return c.charCodeAt(0)-1776})}
+function hhmm(m){var h=Math.floor(m/60),n=m%60;return (h<10?'۰':'')+fa(h)+':'+(n<10?'۰':'')+fa(n)}
+function allPlan(){var o=[];for(var w in D.plan)D.plan[w].forEach(function(i){o.push(i)});return o}
+function planned(ds,id){return allPlan().some(function(i){return i.src[0]==ds&&i.src[1]==id})}
+function isDone(ds,id){if((D.done[ds]||{})[id])return true;return allPlan().some(function(i){return i.src[0]==ds&&i.src[1]==id&&(D.done[i.day]||{})[i.id]})}
+function tasks(x){var dt=x instanceof Date?x:parse(x),ds=ymd(dt);return base(dt).concat(allPlan().filter(function(i){return i.day==ds}).map(function(i){return [i.id,i.l,i.m]}))}
+function dueOf(k){var m=/^(\d+):(\d+)/.exec(lat(k[1]));if(!m)return 1260;return +m[1]*60+ +m[2]+(k[2]||DUR[k[0]]||60)}
+function late(){var n=new Date(),nm=n.getHours()*60+n.getMinutes(),o=[];tasks(today).forEach(function(k){if(!isDone(today,k[0])&&nm>dueOf(k))o.push({ds:today,id:k[0],l:k[1],tag:'امروز: موعدش گذشته'})});return o}
+function mkPlan(manual){
+ var ws=ymd(wstart(new Date())),pl=D.plan[ws]||(D.plan[ws]=[]),ya=ymd(add(new Date(),-1)),wed=ymd(add(parse(ws),4)),last=ya<wed?ya:wed;
+ var ord={blk:0,hw:1},mi=missed(ws,last).filter(function(o){return RES[o.id]&&!planned(o.ds,o.id)}).sort(function(a,b){return ord[a.id]-ord[b.id]||(a.ds<b.ds?-1:1)});
+ var sl=[{d:ymd(add(parse(ws),5)),st:1065,cap:90,u:0},{d:ymd(add(parse(ws),6)),st:960,cap:90,u:0}],un=[];
+ pl.forEach(function(i){sl.forEach(function(s){if(s.d==i.day)s.u+=i.m+10})});
+ mi.forEach(function(o){var m=RES[o.id],ok=false,txt=o.l.replace(/^[۰-۹]+:[۰-۹]+\s*/,''),wd=fdate(o.ds,{weekday:'long'});
+  for(var j=0;j<2&&!ok;j++){var s=sl[j],rem=s.cap-s.u,mm=rem>=m?m:(o.id=='blk'&&rem>=45?45:0);
+   if(mm){pl.push({id:'mk:'+o.ds+':'+o.id,src:[o.ds,o.id],day:s.d,m:mm,l:hhmm(s.st+s.u)+' جبران '+wd+': '+txt+(mm<m?' (فشرده ۴۵ دقیقه‌ای)':'')});s.u+=mm+10;ok=true}}
+  if(!ok)un.push(wd+' '+txt)});
+ D.unp[ws]=un;save();return mi.length}
+function checks(){
+ today=ymd(new Date());var n=new Date(),dw=n.getDay(),ws=ymd(wstart(n)),fire=false;
+ late().forEach(function(o){var k=today+'|'+o.id;if(!D.al[k]){D.al[k]=1;fire=true;alarm('⏰ کار عقب‌افتاده',o.l)}});
+ if((dw==4||dw==5)&&n.getHours()>=8&&!D.wal[ws]){D.wal[ws]=1;fire=true;mkPlan(false);var c=missed(ws,ymd(add(parse(ws),4))).length;
+  alarm('📋 مرور هفته',c?fa(c)+' کار انجام‌نشده داشتی. تکلیف را در برنامهٔ پنجشنبه و جمعه جا دادم.':'این هفته همه کارها انجام شد. آفرین!')}
+ if(dw==5&&n.getHours()>=18&&!D.wal[ws+'f']){D.wal[ws+'f']=1;var r=(D.plan[ws]||[]).filter(function(i){return !(D.done[i.day]||{})[i.id]});if(r.length){fire=true;alarm('🗓️ برنامهٔ جبرانی',fa(r.length)+' کار از برنامهٔ جبرانی هنوز مانده.')}}
+ if(fire&&S.tab!=2)render()}
+var AC;function unlock(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}}
+document.addEventListener('click',unlock);
+function beep(){try{unlock();[0,.3,.6].forEach(function(t){var o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.2;o.connect(g);g.connect(AC.destination);o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.18)})}catch(e){}try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}
+function ban(m){document.getElementById('bm').textContent=m;document.getElementById('ban').style.display='flex'}
+function alarm(t,m){beep();try{if(window.Notification&&Notification.permission=='granted')new Notification(t,{body:m})}catch(e){}ban(t+': '+m)}
+function enNot(){try{Notification.requestPermission()}catch(e){}beep();ban('اگر صدای بوق شنیدی، الارم کار می‌کند.')}
+var P=D.pomo||{m:'w',left:1500,run:false,end:0};
+if(P.run&&P.end<Date.now())P={m:'w',left:1500,run:false,end:0};
+function psave(){D.pomo=P;save()}
+function mmss(s){var m=Math.floor(s/60),c=s%60;return (m<10?'۰':'')+fa(m)+':'+(c<10?'۰':'')+fa(c)}
+function ptog(){unlock();if(P.run){P.left=Math.max(1,Math.ceil((P.end-Date.now())/1000));P.run=false}else{P.run=true;P.end=Date.now()+P.left*1000}psave();render()}
+function prst(){P={m:'w',left:1500,run:false,end:0};psave();render()}
+function pdone(ring){var l=lg(today);if(P.m=='w'){if(ring)l.pomo=(l.pomo||0)+1;P.m='b';P.left=300;if(ring)alarm('🍅 ۲۵ دقیقه تمام شد','۵ دقیقه استراحت کن، بلند شو و آب بخور.')}else{P.m='w';P.left=1500;if(ring)alarm('☕ استراحت تمام شد','دور بعدی ۲۵ دقیقه‌ای را شروع کن.')}P.run=!!ring;P.end=Date.now()+P.left*1000;psave();render()}
+setInterval(function(){if(!P.run){document.title='برنامه تیزهوشان';return}
+ P.left=Math.max(0,Math.ceil((P.end-Date.now())/1000));if(P.left<=0){pdone(true);return}
+ var e=document.getElementById('pt');if(e){e.textContent=mmss(P.left);document.getElementById('pb').style.width=(100-P.left/(P.m=='w'?1500:300)*100)+'%'}
+ document.title=mmss(P.left)+(P.m=='w'?' 🍅':' ☕')},1000);
+function viewPomo(){var l=lg(today),tot=P.m=='w'?1500:300,w=P.m=='w';
+ return '<h1>🍅 پومودورو</h1><p class="sub">۲۵ دقیقه تمرکز، ۵ دقیقه استراحت</p><div class="card" style="text-align:center"><div class="grp">'+(w?'زمان تمرکز':'زمان استراحت')+'</div><div class="big" id="pt" style="font-size:56px">'+mmss(P.left)+'</div><div class="bar"><i id="pb" style="width:'+(100-P.left/tot*100)+'%"></i></div><div class="row" style="justify-content:center;margin-top:14px"><button class="nb" onclick="ptog()">'+(P.run?'⏸ توقف':'▶ شروع')+'</button><button class="nb" onclick="pdone(false)">⏭ رد کردن</button><button class="nb" onclick="prst()">↺ از اول</button></div></div><div class="card"><div class="row sp"><h2>امروز</h2><b>🍅 '+fa(l.pomo||0)+' دور · '+fa((l.pomo||0)*25)+' دقیقه تمرکز</b></div></div><div class="card"><h2>🔔 الارم‌ها</h2><p class="grp" style="margin:0 0 8px">الارم کار عقب‌افتاده، پایان هر دور و مرور هفتگی فقط وقتی کار می‌کنند که این صفحه در مرورگر باز باشد (می‌تواند پشت برنامه‌های دیگر باشد). روی گوشی اگر مرورگر بسته شود یا گوشی قفل بماند، ممکن است الارم دیر برسد.</p><button class="nb" onclick="enNot()">فعال‌سازی صدا و اعلان</button></div>'}
+function chart(vals,max,fmt,col,goal){
+ var h=100,s='<svg viewBox="0 0 308 '+(h+22)+'">';
+ vals.forEach(function(v,i){var x=(6-i)*44+4,bh=max?Math.max(v>0?3:0,v/max*h):0;
+  s+='<rect x="'+x+'" y="'+(h-bh)+'" width="34" height="'+bh+'" rx="5" fill="'+col+'" opacity="'+(v>0?1:.2)+'"/>';
+  s+='<text x="'+(x+17)+'" y="'+(h-bh-4)+'" text-anchor="middle">'+(v>0?fmt(v):'')+'</text>';
+  s+='<text x="'+(x+17)+'" y="'+(h+16)+'" text-anchor="middle">'+NAMES[i]+'</text>'});
+ if(goal)s+='<line x1="0" x2="308" y1="'+(h-goal/max*h)+'" y2="'+(h-goal/max*h)+'" stroke="var(--warn)" stroke-dasharray="4 4" opacity=".7"/>';return s+'</svg>'}
+function tog(ds,id){var x=D.done[ds]||(D.done[ds]={});x[id]=!x[id];save();render()}
+function setM(m){var l=lg(S.day);l.mood=l.mood==m?'':m;save();render()}
+function note(v){lg(S.day).note=v;save()}
+function mv(n){S.day=ymd(add(parse(S.day),n));render()}
+function wv(n){S.wk=ymd(add(parse(S.wk),n*7));render()}
+function tab(n){S.tab=n;render()}
+function taskHtml(ds,k,tag){var on=isDone(ds,k[0]);if(!tag&&on&&!(D.done[ds]||{})[k[0]])tag='جبران‌شده در برنامه آخر هفته';
+ return '<label class="task'+(on?' d':'')+'"><input type="checkbox" '+(on?'checked':'')+' onchange="tog(\''+ds+'\',\''+k[0]+'\')"><span>'+k[1]+(tag?'<small class="tag">'+tag+'</small>':'')+'</span></label>'}
+function viewDay(){
+ var ds=S.day,d=parse(ds),l=lg(ds),t=tasks(d),p=pct(ds),sk=streak(),h='';
+ h+='<div class="row sp"><button class="nb" onclick="mv(-1)">‹ قبل</button><div style="text-align:center"><h1>'+fdate(ds)+'</h1>'+(ds==today?'<p class="sub">امروز</p>':'<p class="sub"><a href="#" onclick="S.day=today;render();return false" style="color:var(--ac)">برگرد به امروز</a></p>')+'</div><button class="nb" onclick="mv(1)">بعد ›</button></div>';
+ var ph=phase(d);if(ph&&ds==today)h+='<div class="card" style="background:var(--soft)"><b>'+ph[0]+'</b><div class="grp" style="margin:2px 0 0">'+ph[1]+'</div></div>';var yest=ymd(add(new Date(),-1)),ws=ymd(wstart(new Date())),m=ds==today&&ws<=yest?missed(ws,yest):[];if(ds==today)m=m.concat(late());m=m.filter(function(o){return !planned(o.ds,o.id)});
+ if(m.length){h+='<div class="card alert"><h2>⏰ عقب‌افتاده‌های این هفته ('+fa(m.length)+')</h2>';m.forEach(function(o){h+=taskHtml(o.ds,[o.id,o.l],o.tag||fdate(o.ds,{weekday:'long'}))});h+='</div>'}
+ h+='<div class="card"><div class="row sp"><h2>کارهای امروز</h2><div class="big">'+fa(p)+'٪</div></div><div class="bar" style="position:relative"><i style="width:'+p+'%"></i><b style="position:absolute;top:0;bottom:0;right:80%;width:2px;background:var(--ink);opacity:.35"></b></div><div class="grp">هدف: ۸۰٪'+(sk?' · 🔥 '+fa(sk)+' روز متوالی':'')+'</div>';
+ t.forEach(function(k){h+=taskHtml(ds,k)});h+='</div>';
+ h+='<div class="card"><h2>امروز چطور بود؟</h2><div class="moods">'+[['😄','عالی'],['🙂','خوب'],['😐','معمولی'],['😞','بد']].map(function(e){return '<button class="'+(l.mood==e[0]?'on':'')+'" onclick="setM(\''+e[0]+'\')">'+e[0]+'<small>'+e[1]+'</small></button>'}).join('')+'</div></div>';
+ h+='<div class="card"><h2>یادداشت</h2><textarea rows="2" placeholder="مثلاً: در ریاضی بخش هندسه ضعیف بودم" oninput="note(this.value)">'+(l.note||'').replace(/</g,'&lt;')+'</textarea></div>';
+ return h}
+function viewWeek(){
+ var ws=S.wk,days=[];for(var i=0;i<7;i++)days.push(ymd(add(parse(ws),i)));
+ var cur=ws==ymd(wstart(new Date())),last=days[6]<today?days[6]:ymd(add(new Date(),-1));
+ var ps=days.map(function(d){return d>today?0:pct(d)});
+ var tot=0,dn=0;days.forEach(function(d){if(d<=today){var t=base(d),x=D.done[d]||{};t.forEach(function(k){tot++;if(isDone(d,k[0]))dn++})}});
+ var pm=0;days.forEach(function(d){pm+=((D.log[d]||{}).pomo||0)});
+ var h='<div class="row sp"><button class="nb" onclick="wv(-1)">‹ هفته قبل</button><button class="nb" onclick="wv(1)">هفته بعد ›</button></div>';
+ h+='<h1>خلاصه هفته</h1><p class="sub">'+fdate(days[0],{day:'numeric',month:'long'})+' تا '+fdate(days[6],{day:'numeric',month:'long'})+(cur?' (این هفته)':'')+'</p>';
+ h+='<div class="card"><div class="stat"><div><b>'+fa(tot?dn/tot*100:0)+'٪</b><span>انجام‌شده</span></div><div><b>'+fa(dn)+' از '+fa(tot)+'</b><span>کارها</span></div><div><b>'+fa(pm)+'</b><span>دور پومودورو 🍅</span></div></div><div class="bar" style="margin-top:10px"><i style="width:'+(tot?dn/tot*100:0)+'%"></i></div>'+'</div>';
+ h+='<div class="card"><h2>درصد انجام کارها در هر روز</h2>'+chart(ps,100,function(v){return fa(v)+'٪'},'var(--ac)',80)+'</div>';
+ h+='<div class="card"><h2>حال و هوای روزها</h2><div style="display:flex;direction:rtl;justify-content:space-between;text-align:center">'+days.map(function(d,i){return '<div><div style="font-size:24px">'+(((D.log[d]||{}).mood)||'·')+'</div><small style="color:var(--mut)">'+NAMES[i]+'</small></div>'}).join('')+'</div></div>';
+ var pl=D.plan[ws]||[];h+='<div class="card"><h2>🗓️ برنامهٔ جبرانی آخر هفته</h2>';
+ if(pl.length){pl.forEach(function(it){h+=taskHtml(it.day,[it.id,it.l],fdate(it.day,{weekday:'long'}))})}else h+='<p class="grp">هنوز ساخته نشده. پنجشنبه صبح خودکار ساخته می‌شود.</p>';
+ var un=(D.unp||{})[ws]||[];if(un.length)h+='<div class="grp">جا نشد (تا برنامه شدنی بماند): '+un.join('، ')+'</div>';
+ if(cur)h+='<button class="nb" style="margin-top:8px" onclick="mkPlan(true);render()">ساخت یا به‌روزرسانی برنامه جبرانی</button>';
+ h+='</div>';
+ 
+ var m=last>=ws?missed(ws,last):[];
+ h+='<div class="card'+(m.length?' alert':'')+'"><h2>'+(m.length?'⏰ انجام‌نشده‌ها ('+fa(m.length)+')':'🎉 همه کارها انجام شده')+'</h2>';
+ var g='';m.forEach(function(o){if(g!=o.ds){g=o.ds;h+='<div class="grp">'+fdate(o.ds)+'</div>'}h+=taskHtml(o.ds,[o.id,o.l],planned(o.ds,o.id)?'در برنامهٔ جبرانی جا داده شد':'')});h+='</div>';
+ var dd=days.filter(function(d){return d<=today}).map(function(d){var t=base(d),x=D.done[d]||{};return t.filter(function(k){return isDone(d,k[0])}).length}).reduce(function(a,b){return a+b},0);
+ h+='<div class="card"><h2>✅ انجام‌شده‌ها ('+fa(dd)+')</h2>';
+ days.forEach(function(d){if(d>today)return;var x=D.done[d]||{},t=base(d).filter(function(k){return isDone(d,k[0])});if(t.length){h+='<div class="grp">'+fdate(d)+'</div>';t.forEach(function(k){h+=taskHtml(d,k)})}});
+ h+='</div><div class="card"><h2>💾 پشتیبان‌گیری</h2><p class="grp" style="margin:0 0 6px">داده‌ها فقط روی همین مرورگر هستند. برای انتقال به دستگاه دیگر پشتیبان بگیر و متن را همان‌جا بازیابی کن.</p><textarea id="bkt" rows="2"></textarea><div class="row" style="margin-top:6px"><button class="nb" onclick="bk()">پشتیبان‌گیری</button><button class="nb" onclick="rs()">بازیابی از متن</button></div><div class="grp" id="bkm"></div></div>';return h}
+function render(){var y=window.scrollY;
+ document.getElementById('app').innerHTML=[viewDay,viewWeek,viewPomo][S.tab]();
+ [0,1,2].forEach(function(i){document.getElementById('t'+i).className=S.tab==i?'on':''});
+ window.scrollTo(0,y)}
+[0,1,2].forEach(function(i){document.getElementById('t'+i).onclick=function(){tab(i)}});
+render();checks();setInterval(checks,30000);
+</script>
+</body>
+</html>
